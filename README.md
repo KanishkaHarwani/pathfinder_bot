@@ -75,7 +75,7 @@ The `deadzone:=0.2` parameter ignores joystick axis input between -0.2 and 0.2, 
 ### Visualize in RViz
 
 ```bash
-rviz2 -d src/pathfinder_bot/rviz/view_bot.rviz
+rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 ```
 ## Package Structure
 ```pathfinder_bot/
