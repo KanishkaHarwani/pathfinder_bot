@@ -12,7 +12,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     # !!! MAKE SURE YOU SET THE PACKAGE NAME CORRECTLY !!!
-    package_name = 'articubot_one'  # <--- CHANGE ME
+    package_name = 'pathfinder_bot'  # <--- CHANGE ME
 
     # Include the robot_state_publisher launch file, provided by our own
     # package. Force sim time to be enabled.
@@ -45,7 +45,7 @@ def generate_launch_description():
         package='ros_gz_sim', executable='create',
         arguments=[
             '-topic', 'robot_description',
-            '-name', 'my_bot'
+            '-name', 'pathfinder'
         ],
         output='screen'
     )
@@ -83,6 +83,6 @@ def generate_launch_description():
         set_env_vars_resources,
         gazebo,
         spawn_entity,
-        ros_gz_bridge,
         ros_gz_image_bridge,
+        ros_gz_bridge,
     ])
