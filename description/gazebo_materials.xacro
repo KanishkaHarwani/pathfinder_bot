@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- NOTE: named Ogre materials like "Gazebo/White" or "Gazebo/Blue" are a
+         Gazebo Classic convention and don't reliably render under the new
+         Gazebo's Ogre2 renderer. Your visual colors already come through fine
+         via the rgba values in materials.xacro applied in links.xacro, so
+         those tags have been dropped here. Only the caster wheel's low
+         friction values are Gazebo-specific behaviour and are kept below,
+         using the new <surface> friction syntax instead of the old
+         shorthand <mu1>/<mu2> tags. -->
+
+    <gazebo reference="caster_wheel_link">
+        <mu1 value="0.0001"/>
+        <mu2 value="0.0001"/>
+    </gazebo>
+    <!-- This shorthand is an sdformat URDF-extension feature (independent of
+         which Gazebo version actually runs the SDF), so it should still work.
+         If the caster still has too much rolling resistance in testing, the
+         explicit alternative is:
+           <gazebo reference="caster_wheel_link">
+             <collision><surface><friction><ode>
+               <mu>0.0001</mu><mu2>0.0001</mu2>
+             </ode></friction></surface></collision>
+           </gazebo> -->
+
+</robot>

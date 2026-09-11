@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- =========================================== -->
+    <!-- ============= CAMERA SENSOR =============== -->
+    <!-- =========================================== -->
+    <gazebo reference="front_camera_link">
+        <sensor name="rgbd_camera" type="rgbd_camera">
+            <pose>0.05 0 0 0 0 0</pose>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>20</update_rate>
+            <topic>camera</topic>
+            <gz_frame_id>front_camera_link</gz_frame_id>
+            <camera name="rgbd_camera">
+                <horizontal_fov>1.089</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.05</near>
+                    <far>20.0</far>
+                </clip>
+                <camera_info_topic>camera/camera_info</camera_info_topic>
+                <depth_camera>
+                    <clip>
+                        <near>0.05</near>
+                        <far>10.0</far>
+                    </clip>
+                </depth_camera>
+            </camera>
+        </sensor>
+    </gazebo>
+    
+    <gazebo reference="rear_camera_link">
+        <sensor name="camera2_rgbd" type="rgbd_camera">
+            <pose>0.05 0 0 0 0 0</pose>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>20</update_rate>
+            <topic>camera2</topic>
+            <gz_frame_id>rear_camera_link</gz_frame_id>
+            <camera name="rgbd_camera">
+                <horizontal_fov>1.089</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.05</near>
+                    <far>20.0</far>
+                </clip>
+                <camera_info_topic>camera2/camera_info</camera_info_topic>
+                <depth_camera>
+                    <clip>
+                        <near>0.05</near>
+                        <far>10.0</far>
+                    </clip>
+                </depth_camera>
+            </camera>
+        </sensor>
+    </gazebo>
+    
+    <!-- =========================================== -->
+    <!-- ============== LIDAR SENSOR =============== -->
+    <!-- =========================================== -->
+    <gazebo reference="lidar_link">
+        <sensor name="laser" type="gpu_lidar">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>false</visualize>
+            <update_rate>20</update_rate>
+            <topic>scan</topic>
+            <gz_frame_id>lidar_link</gz_frame_id>
+            <lidar>
+                <scan>
+                    <horizontal>
+                        <samples>360</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-3.14</min_angle>
+                        <max_angle>3.14</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>10</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.149066</min_angle>
+                        <max_angle>0.20000</max_angle>
+                    </vertical>
+                </scan>
+                <range>
+                    <min>0.3</min>
+                    <max>12</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </lidar>
+        </sensor>
+    </gazebo>
+
+</robot>

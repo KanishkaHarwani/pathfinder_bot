@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <gazebo>
+        <!-- ============================================= -->
+        <!-- ============= DIFFERENTIAL DRIVE ============= -->
+        <!-- gz-sim built-in system, replaces               -->
+        <!-- libgazebo_ros_diff_drive.so                     -->
+        <!-- ============================================= -->
+        <plugin filename="libignition-gazebo-diff-drive-system.so" name="ignition::gazebo::systems::DiffDrive">
+
+            <!-- Wheel Information -->
+            <left_joint>left_wheel_joint</left_joint>
+            <right_joint>right_wheel_joint</right_joint>
+            <wheel_separation>0.35</wheel_separation>
+            <wheel_radius>0.075</wheel_radius>
+
+            <!-- Limits -->
+            <!-- max_linear_acceleration is a whole-vehicle linear accel limit,
+                 not per-wheel torque like the old plugin. Approximated here as
+                 old max_wheel_acceleration (10.0) * wheel_radius (0.075).
+                 Actual wheel torque is now set via <limit effort="..."/> on the
+                 joints themselves - see joints.xacro. Tune both to taste. -->
+            <max_linear_acceleration>0.75</max_linear_acceleration>
+
+            <!-- Topics -->
+            <topic>cmd_vel</topic>
+            <odom_topic>odom</odom_topic>
+            <frame_id>odom</frame_id>
+            <child_frame_id>base_link</child_frame_id>
+            <tf_topic>tf</tf_topic>
+            <!-- was odom_publisher_frequency — not a recognized tag on
+                 Fortress's DiffDrive plugin, silently ignored, so odometry
+                 would have run at whatever the plugin's internal default is
+                 rather than the intended 50 Hz. Corrected to the tag name
+                 confirmed working in the vslam-bot project. -->
+            <odom_publish_frequency>50</odom_publish_frequency>
+
+        </plugin>
+
+        <!-- ============================================= -->
+        <!-- =========== JOINT STATE PUBLISHER ============ -->
+        <!-- gz-sim built-in system, replaces                -->
+        <!-- libgazebo_ros_joint_state_publisher.so          -->
+        <!-- ============================================= -->
+        <plugin filename="libignition-gazebo-joint-state-publisher-system.so" name="ignition::gazebo::systems::JointStatePublisher">
+            <topic>joint_states</topic>
+            <joint_name>left_wheel_joint</joint_name>
+            <joint_name>right_wheel_joint</joint_name>
+        </plugin>
+    </gazebo>
+
+</robot>
