@@ -34,9 +34,23 @@ colcon build --packages-select pathfinder_bot
 source install/setup.bash
 ```
 
+## Quick Start
+
+Run everything (simulation, joystick input, teleop, and RViz) with one command:
+
+```bash
+./startup.sh
+```
+
+This launches four terminal tabs:
+1. Gazebo simulation (robot spawn + bridges)
+2. `joy_node` (joystick driver, with a deadzone of ±0.2 to filter drift/noise)
+3. `teleop_twist_joy` (converts joystick input to `/cmd_vel`)
+4. RViz (robot + sensor visualization)
+
 ## Usage
 
-### Launch the simulation
+### Launch the simulation only
 
 ```bash
 ros2 launch pathfinder_bot launch_sim.launch.py
@@ -44,18 +58,25 @@ ros2 launch pathfinder_bot launch_sim.launch.py
 
 This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras).
 
-### Drive the robot manually
+### Drive the robot with a joystick
 
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 run joy joy_node --ros-args -p deadzone:=0.2
+ros2 run teleop_twist_joy teleop_node --ros-args \
+  -p axis_linear.x:=1 \
+  -p axis_angular.yaw:=0 \
+  -p scale_linear.x:=0.5 \
+  -p scale_angular.yaw:=1.0 \
+  -p enable_button:=0
 ```
+
+The `deadzone:=0.2` parameter ignores joystick axis input between -0.2 and 0.2, preventing drift or noise from sending unintended movement commands.
 
 ### Visualize in RViz
 
 ```bash
 rviz2 -d src/pathfinder_bot/rviz/view_bot.rviz
 ```
-
 ## Package Structure
 ```pathfinder_bot/
 ├── description/ # URDF/xacro robot definition

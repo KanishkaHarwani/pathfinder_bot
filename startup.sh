@@ -29,4 +29,4 @@ gnome-terminal --tab --title="Teleop Joy" -- bash -c "source $SETUP_FILE; ros2 r
 sleep 1
 
 # Terminal 4: RViz
-gnome-terminal --tab --title="RViz" -- bash -c "source $SETUP_FILE; rviz2 -d $WS_DIR/src/pathfinder_bot/rviz/view_bot.rviz; exec bash"
+gnome-terminal --tab --title="RViz" -- bash -c "source $SETUP_FILE; rviz2 -d $WS_DIR/src/pathfinder_bot/rviz/pathfinder.rviz; exec bash"
