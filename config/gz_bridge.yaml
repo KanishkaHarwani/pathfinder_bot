@@ -51,32 +51,27 @@
   direction: GZ_TO_ROS
 
 # published by the rgb_camera sensor
-- ros_topic_name: "camera/camera_info"
-  gz_topic_name: "camera/camera_info"
-  ros_type_name: "sensor_msgs/msg/CameraInfo"
-  gz_type_name: "gz.msgs.CameraInfo"
-  direction: GZ_TO_ROS
- 
-# SECOND rgbd_camera (TEST — load test, remove alongside the sensor block
-# above once done)
-- ros_topic_name: "camera2/camera_info"
-  gz_topic_name: "camera2/camera_info"
+- ros_topic_name: "camera/front/camera_info"
+  gz_topic_name: "camera/front/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
 
-- ros_topic_name: "camera2/points"
-  gz_topic_name: "camera2/points"
+- ros_topic_name: "camera/front/points"
+  gz_topic_name: "camera/front/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS 
+  
+# SECOND rgbd_camera 
+- ros_topic_name: "camera/rear/camera_info"
+  gz_topic_name: "camera/rear/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
 
-# published by the combined rgbd_camera sensor (TEST config — was
-# "camera/depth_image/points" under the split depth_camera sensor;
-# the combined rgbd_camera auto-publishes points at "camera/points"
-# instead. Revert this alongside the sensor config when done testing.
-- ros_topic_name: "camera/points"
-  gz_topic_name: "camera/points"
+- ros_topic_name: "camera/rear/points"
+  gz_topic_name: "camera/rear/points"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
