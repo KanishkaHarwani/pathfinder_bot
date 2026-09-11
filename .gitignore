@@ -1,6 +1,33 @@
+# ROS 2 / colcon build artifacts
 build/
 install/
 log/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+
+# C/C++ build artifacts
+*.o
+*.so
+*.a
+
+# Editor/IDE
 .vscode/
+.idea/
+*.swp
+*~
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Gazebo logs/cache (if generated locally during testing)
+.gz/
+~/.gazebo/
+
+# ROS bag files (usually large, shouldn't be committed unless intentional)
+*.bag
+*.db3
