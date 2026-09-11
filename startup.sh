@@ -4,13 +4,21 @@
 #
 # Requires: gnome-terminal (default on Ubuntu/GNOME desktops)
 # Usage: ./startup.sh
+#
+# Workspace location is auto-detected from this script's own path, so it
+# works no matter what you've named your ROS 2 workspace. This just assumes
+# the usual layout: <your_ws>/src/pathfinder_bot/startup.sh — i.e. the repo
+# is cloned into src/ as normal. No editing required per machine.
 
-WS_DIR=~/learn_ws
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SETUP_FILE="$WS_DIR/install/setup.bash"
 
 if [ ! -f "$SETUP_FILE" ]; then
     echo "Could not find $SETUP_FILE"
-    echo "Update WS_DIR in this script to point to your ROS 2 workspace."
+    echo "Detected workspace root: $WS_DIR"
+    echo "Make sure you've built the workspace (colcon build) and that this"
+    echo "script lives at <your_ws>/src/pathfinder_bot/startup.sh."
     exit 1
 fi
 

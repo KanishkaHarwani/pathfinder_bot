@@ -48,6 +48,8 @@ This launches four terminal tabs:
 3. `teleop_twist_joy` (converts joystick input to `/cmd_vel`)
 4. RViz (robot + sensor visualization)
 
+The script auto-detects your workspace from its own location, so it works regardless of what you've named it — no editing required, as long as the repo is cloned into `src/` as usual.
+
 ## Usage
 
 ### Launch the simulation only
@@ -100,9 +102,11 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 | `/camera/front/image` | Front camera RGB image |
 | `/camera/front/depth_image` | Front camera depth image |
 | `/camera/front/camera_info` | Front camera intrinsics |
+| `/camera/front/points` | Front camera point cloud |
 | `/camera/rear/image` | Rear camera RGB image |
 | `/camera/rear/depth_image` | Rear camera depth image |
 | `/camera/rear/camera_info` | Rear camera intrinsics |
+| `/camera/rear/points` | Rear camera point cloud |
 
 ## Roadmap
 
