@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(articubot_one)
+project(pathfinder_bot)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -33,7 +33,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY config description launch worlds
+  DIRECTORY config description launch models rviz worlds
   DESTINATION share/${PROJECT_NAME}
 )
 
