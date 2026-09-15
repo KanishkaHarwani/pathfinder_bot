@@ -12,6 +12,7 @@ This project builds on the ROS 2 / Gazebo robot description structure popularize
 - Differential drive base (diff-drive plugin via `gz-sim`)
 - Front and rear RGBD cameras (`camera/front`, `camera/rear`)
 - 3D lidar (gpu_lidar) for scanning and point cloud generation
+- IMU mounted at `base_link` (coincident with the drive axis) for orientation, angular velocity, and linear acceleration
 - Full ROS 2 ↔ Gazebo topic bridging (odometry, TF, joint states, scan, camera streams)
 - RViz configuration for visualizing the robot and sensor data
 - Modular xacro-based robot description (links, joints, materials, inertials, Gazebo plugins)
@@ -99,6 +100,7 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 | `/scan` | Lidar scan |
 | `/scan/points` | Lidar point cloud |
 | `/joint_states` | Wheel joint states |
+| `/imu` | IMU orientation, angular velocity, linear acceleration |
 | `/camera/front/image` | Front camera RGB image |
 | `/camera/front/depth_image` | Front camera depth image |
 | `/camera/front/camera_info` | Front camera intrinsics |

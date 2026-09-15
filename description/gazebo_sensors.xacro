@@ -97,5 +97,19 @@
             </lidar>
         </sensor>
     </gazebo>
+    
+    <!-- =========================================== -->
+    <!-- =============== IMU SENSOR ================= -->
+    <!-- =========================================== -->
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <pose>0 0 0 0 0 0</pose>
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>100</update_rate>
+            <topic>imu</topic>
+            <gz_frame_id>imu_link</gz_frame_id>
+        </sensor>
+    </gazebo>
 
 </robot>
