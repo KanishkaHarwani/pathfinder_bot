@@ -21,7 +21,7 @@
                 </image>
                 <clip>
                     <near>0.05</near>
-                    <far>20.0</far>
+                    <far>200.0</far>
                 </clip>
                 <camera_info_topic>camera/front/camera_info</camera_info_topic>
                 <depth_camera>
@@ -51,7 +51,7 @@
                 </image>
                 <clip>
                     <near>0.05</near>
-                    <far>20.0</far>
+                    <far>200.0</far>
                 </clip>
                 <camera_info_topic>camera/rear/camera_info</camera_info_topic>
                 <depth_camera>

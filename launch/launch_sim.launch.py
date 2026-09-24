@@ -19,7 +19,7 @@ def generate_launch_description():
         )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
 
-    world = os.path.join(get_package_share_directory(package_name), 'worlds', 'empty.world')
+    world = os.path.join(get_package_share_directory(package_name), 'worlds', 'warehouse_world.sdf')
 
     set_env_vars_resources = AppendEnvironmentVariable(
         'GZ_SIM_RESOURCE_PATH',
@@ -35,7 +35,8 @@ def generate_launch_description():
         package='ros_gz_sim', executable='create',
         arguments=[
             '-topic', 'robot_description',
-            '-name', 'pathfinder'
+            '-name', 'pathfinder',
+            '-z', '0.05'
         ],
         output='screen'
     )

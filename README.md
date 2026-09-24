@@ -59,7 +59,11 @@ The script auto-detects your workspace from its own location, so it works regard
 ros2 launch pathfinder_bot launch_sim.launch.py
 ```
 
-This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras).
+This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras). By default it loads `worlds/maze.world` — a closed 11x11-cell maze with a 3x3 open spawn room at the center. Pass `world:=empty.world` to use the plain world instead:
+
+```bash
+ros2 launch pathfinder_bot launch_sim.launch.py world:=empty.world
+```
 
 ### Drive the robot with a joystick
 
