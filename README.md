@@ -19,11 +19,13 @@ This project builds on the ROS 2 / Gazebo robot description structure popularize
 
 ## Prerequisites
 
-- ROS 2 (tested on [Humble])
-- Gazebo (Fortress)
-- `ros_gz_sim`, `ros_gz_bridge`, `ros_gz_image`
-- `xacro`
-- `robot_state_publisher`
+- Ubuntu 24.04
+- ROS 2 Jazzy
+- Gazebo Harmonic
+- `ros_gz_sim`, `ros_gz_bridge`, `ros_gz_image` (`sudo apt install ros-jazzy-ros-gz`)
+- `xacro`, `robot_state_publisher`, `rviz2`
+- `joy`, `teleop_twist_joy`
+- `nav2_bringup`, `slam_toolbox` (for the upcoming Nav2 integration)
 
 ## Installation
 
@@ -31,6 +33,7 @@ This project builds on the ROS 2 / Gazebo robot description structure popularize
 cd ~/ros2_ws/src
 git clone https://github.com/KanishkaHarwani/pathfinder_bot.git
 cd ~/ros2_ws
+rosdep install --from-paths src --ignore-src -r -y
 colcon build --packages-select pathfinder_bot
 source install/setup.bash
 ```
@@ -59,11 +62,17 @@ The script auto-detects your workspace from its own location, so it works regard
 ros2 launch pathfinder_bot launch_sim.launch.py
 ```
 
-This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras). By default it loads `worlds/maze.world` — a closed 11x11-cell maze with a 3x3 open spawn room at the center. Pass `world:=empty.world` to use the plain world instead:
+This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras). It loads `worlds/warehouse_world.sdf`, a custom warehouse with outer walls, interior walls, blockers, and shelves.
+
+### Check that everything works
+
+With the simulation running, in a second terminal:
 
 ```bash
-ros2 launch pathfinder_bot launch_sim.launch.py world:=empty.world
+./check_sim.sh
 ```
+
+This confirms that the clock, odometry, TF, joint states, IMU, lidar, and both cameras are publishing, then drives the robot forward briefly and checks that odometry changes.
 
 ### Drive the robot with a joystick
 
@@ -88,8 +97,9 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 ```pathfinder_bot/
 ├── description/ # URDF/xacro robot definition
 ├── launch/ # Launch files (sim + robot_state_publisher)
-├── config/ # ROS 2 ↔ Gazebo bridge configuration
+├── config/ # ROS 2 ↔ Gazebo bridge and SLAM configuration
 ├── worlds/ # Gazebo world files
+├── maps/ # Saved occupancy map (from slam_toolbox)
 ├── rviz/ # Saved RViz configuration
 └── models/ # Custom Gazebo models/meshes (if any)
 ```
@@ -98,6 +108,7 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 
 | Topic | Description |
 |---|---|
+| `/clock` | Simulation time (Gazebo → ROS) |
 | `/cmd_vel` | Velocity commands (ROS → Gazebo) |
 | `/odom` | Odometry (Gazebo → ROS) |
 | `/tf` | Transform tree |
@@ -116,9 +127,11 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 
 ## Roadmap
 
-- [ ] Custom simulation world
-- [ ] SLAM / autonomous navigation integration
-- [ ] Custom Path-Planning and Obstacle Avoidance test in gazebo
+- [x] Custom simulation world
+- [x] SLAM mapping (`slam_toolbox`, saved map in `maps/`)
+- [ ] Nav2 autonomous navigation with AMCL
+- [ ] Custom Path-Planning and Obstacle Avoidance test in Gazebo
+- [ ] Distributed setup reference (simulation on a laptop, Nav2 on a Jetson)
 
 ## Credits
 

@@ -2,7 +2,8 @@
 # startup.sh - Launches the full Pathfinder Bot simulation stack
 # (Gazebo sim, joystick input, teleop, and RViz) each in its own terminal tab.
 #
-# Requires: gnome-terminal (default on Ubuntu/GNOME desktops)
+# Requires: Ubuntu 24.04, ROS 2 Jazzy, Gazebo Harmonic, gnome-terminal
+# (default on Ubuntu/GNOME desktops)
 # Usage: ./startup.sh
 #
 # Workspace location is auto-detected from this script's own path, so it
@@ -19,6 +20,15 @@ if [ ! -f "$SETUP_FILE" ]; then
     echo "Detected workspace root: $WS_DIR"
     echo "Make sure you've built the workspace (colcon build) and that this"
     echo "script lives at <your_ws>/src/pathfinder_bot/startup.sh."
+    exit 1
+fi
+
+# Guard against a stale build from an older ROS release (e.g. Humble).
+# Sourced in a subshell so this script's own environment stays clean.
+DISTRO="$(bash -c "source $SETUP_FILE >/dev/null 2>&1; echo \$ROS_DISTRO")"
+if [ "$DISTRO" != "jazzy" ]; then
+    echo "Workspace at $WS_DIR is built for '${DISTRO:-unknown}', not jazzy."
+    echo "Delete build/ install/ log/ and rebuild: colcon build"
     exit 1
 fi
 

@@ -22,6 +22,10 @@
 <plugin filename="gz-sim-scene-broadcaster-system"
         name="gz::sim::systems::SceneBroadcaster"/>
 
+<!-- IMU system: required for the IMU sensor to publish data -->
+<plugin filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu"/>
+
 <!-- Sensors system: enables simulated sensors such as
      LiDAR, cameras, IMU, etc. Without this plugin
      sensors exist but do not produce data -->
@@ -29,8 +33,8 @@
         name="gz::sim::systems::Sensors">
 
   <!-- Rendering engine used by sensors.
-       "ogre2" is standard but WSL2 often works better with "ogre". -->
-  <render_engine>ogre</render_engine>
+       Harmonic's gpu_lidar and rgbd_camera require "ogre2". -->
+  <render_engine>ogre2</render_engine>
 
 </plugin>
 
