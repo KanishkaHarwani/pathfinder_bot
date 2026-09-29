@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Cyclone DDS config for the laptop <-> Jetson link.
+
+  - Discovery uses an explicit peer list instead of multicast, so it does not
+    depend on switch or NIC multicast behavior.
+  - DDS is bound to the Ethernet interface (MY_IP), so it never picks Wi-Fi.
+  - ${VAR} values come from the environment, set by env_laptop.sh / env_jetson.sh.
+    The same file is used on both machines.
+-->
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+  <Domain Id="any">
+    <General>
+      <Interfaces>
+        <NetworkInterface address="${MY_IP}" multicast="false"/>
+      </Interfaces>
+      <AllowMulticast>false</AllowMulticast>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <MaxAutoParticipantIndex>50</MaxAutoParticipantIndex>
+      <Peers>
+        <Peer address="${LAPTOP_IP}"/>
+        <Peer address="${JETSON_IP}"/>
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

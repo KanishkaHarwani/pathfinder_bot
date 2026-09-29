@@ -1,6 +1,6 @@
 #!/bin/bash
 # startup.sh - Launches the full Pathfinder Bot simulation stack
-# (Gazebo sim, joystick input, teleop, and RViz) each in its own terminal tab.
+# (Gazebo sim, joystick input, teleop, and Nav2 + RViz) each in its own terminal tab.
 #
 # Requires: Ubuntu 24.04, ROS 2 Jazzy, Gazebo Harmonic, gnome-terminal
 # (default on Ubuntu/GNOME desktops)
@@ -46,5 +46,7 @@ sleep 1
 gnome-terminal --tab --title="Teleop Joy" -- bash -c "source $SETUP_FILE; ros2 run teleop_twist_joy teleop_node --ros-args -p axis_linear.x:=1 -p axis_angular.yaw:=0 -p scale_linear.x:=0.5 -p scale_angular.yaw:=1.0 -p enable_button:=0; exec bash"
 sleep 1
 
-# Terminal 4: RViz
-gnome-terminal --tab --title="RViz" -- bash -c "source $SETUP_FILE; rviz2 -d $WS_DIR/src/pathfinder_bot/rviz/pathfinder.rviz; exec bash"
+# Terminal 4: Nav2 (map_server, AMCL, planner, controller) + RViz
+# Give the sim a few seconds to publish /clock and the robot to spawn first.
+sleep 4
+gnome-terminal --tab --title="Nav2 + RViz" -- bash -c "source $SETUP_FILE; ros2 launch pathfinder_bot nav_bringup.launch.py; exec bash"
