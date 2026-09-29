@@ -1,86 +1,160 @@
-# Distributed setup (v2): simulation on a laptop, Nav2 on a Jetson
+# pathfinder_bot
+ROS 2 differential-drive robot with dual RGBD cameras and lidar, simulated in Gazebo for autonomous navigation.
 
-A reference setup for splitting Pathfinder across two machines. This is the setup the author uses, shared for anyone who wants to do something similar. It is **not a supported configuration**; expect to adapt it to your hardware and network.
+## Overview
 
-For a single machine, ignore this folder and follow the main [README](../README.md).
+Pathfinder is a differential-drive robot built for simulation-based navigation work. It's equipped with front and rear RGBD cameras for all-around visual sensing and a 3D lidar for obstacle detection and mapping, making it suitable for tasks like SLAM, autonomous exploration, and obstacle avoidance.
 
-## What runs where
+This project builds on the ROS 2 / Gazebo robot description structure popularized by [Articulated Robotics](https://articulatedrobotics.xyz/) (see Credits below), extended with a dual-camera sensor setup, custom topic/bridge configuration, and full Nav2 autonomous navigation.
 
-| Laptop | Jetson |
-|---|---|
-| Gazebo, `ros_gz_bridge`, `ros_gz_image`, `robot_state_publisher` | `map_server`, AMCL, Nav2 (`nav_bringup.launch.py rviz:=false`) |
-| RViz (`pathfinder_nav.rviz`) | |
-| `joy_node`, `teleop_twist_joy` | |
+This README covers **v1**: everything running on a single machine. For a reference setup that splits simulation and navigation across two machines (a laptop and a Jetson), see [`distributed/README.md`](distributed/README.md).
 
-Only lightweight topics cross the network (`/clock`, `/odom`, `/tf`, `/scan` one way; `/cmd_vel`, `/map`, costmaps, plans the other). Camera images and point clouds stay on the laptop. See [docs/Architecture.md](../docs/Architecture.md).
+## Features
 
-## Tested on
+- Differential drive base (diff-drive plugin via `gz-sim`)
+- Front and rear RGBD cameras (`camera/front`, `camera/rear`)
+- 3D lidar (gpu_lidar) for scanning and point cloud generation
+- IMU mounted at `base_link` (coincident with the drive axis) for orientation, angular velocity, and linear acceleration
+- Full ROS 2 ↔ Gazebo topic bridging (odometry, TF, joint states, scan, camera streams)
+- SLAM mapping with `slam_toolbox`
+- Autonomous navigation with Nav2 and AMCL — goal-pose navigation, localization, and obstacle avoidance for obstacles not present on the saved map, all tested working in simulation
+- RViz configurations for both sensor visualization and navigation
+- Modular xacro-based robot description (links, joints, materials, inertials, Gazebo plugins)
 
-| | |
-|---|---|
-| Laptop | Ubuntu 24.04, ROS 2 Jazzy, Gazebo Harmonic |
-| Jetson | Ubuntu 24.04, ROS 2 Jazzy: **fill in the model** |
-| Link | Direct Ethernet with static IPs |
-| DDS | Cyclone DDS (`rmw_cyclonedds_cpp`) |
+## Prerequisites
 
-## Setup
+- Ubuntu 24.04
+- ROS 2 Jazzy
+- Gazebo Harmonic
+- `ros_gz_sim`, `ros_gz_bridge`, `ros_gz_image` (`sudo apt install ros-jazzy-ros-gz`)
+- `xacro`, `robot_state_publisher`, `rviz2`
+- `joy`, `teleop_twist_joy`
+- `nav2_bringup` (autonomous navigation), `slam_toolbox` (mapping)
 
-Do these once on each machine.
-
-1. **Install ROS 2 Jazzy.**
-   - Laptop: `ros-jazzy-desktop`, `ros-jazzy-ros-gz`, `ros-jazzy-rmw-cyclonedds-cpp`, plus `joy` and `teleop_twist_joy`.
-   - Jetson: `ros-jazzy-navigation2`, `ros-jazzy-nav2-bringup`, `ros-jazzy-rmw-cyclonedds-cpp`.
-2. **Clone and build the repo on both** (it is one package):
-   ```bash
-   cd ~/ros2_ws/src && git clone https://github.com/KanishkaHarwani/pathfinder_bot.git
-   cd ~/ros2_ws
-   rosdep install --from-paths src --ignore-src -r -y --skip-keys "ros_gz_sim ros_gz_bridge ros_gz_image"   # Jetson
-   rosdep install --from-paths src --ignore-src -r -y                                                        # laptop
-   colcon build --packages-select pathfinder_bot
-   ```
-   The Jetson needs the package because Nav2 reads its params and map from the package share directory. It never launches the sim.
-3. **Set the addresses.** Edit `distributed/network.env` on **both** machines with the same values:
-   ```bash
-   export ROS_DOMAIN_ID=42
-   export LAPTOP_IP=<laptop ethernet ip>
-   export JETSON_IP=<jetson ethernet ip>
-   ```
-   Find each address with `ip -4 addr`. Both machines must be on the same subnet.
-
-## Run
-
-1. **Laptop:** `./distributed/startup_laptop.sh`. Wait until the robot has spawned in Gazebo.
-2. **Jetson:** `./distributed/startup_jetson.sh`. It waits for `/clock` from the laptop, then starts Nav2.
-3. In RViz on the laptop, the map and costmaps should appear. Send a **2D Goal Pose**.
-
-## Verify the link
-
-With both sides running, on each machine:
+## Installation
 
 ```bash
-./distributed/check_link.sh laptop     # on the laptop
-./distributed/check_link.sh jetson     # on the Jetson
+cd ~/ros2_ws/src
+git clone https://github.com/KanishkaHarwani/pathfinder_bot.git
+cd ~/ros2_ws
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --packages-select pathfinder_bot
+source install/setup.bash
 ```
 
-It checks the ping, the simulation topics, the Nav2 topics, and that `/amcl`, `/bt_navigator` and `/robot_state_publisher` are visible from that machine.
+## Quick Start
 
-## How discovery works
+Run everything (simulation, joystick input, teleop, Nav2, and RViz) with one command:
 
-`cyclonedds.xml` disables multicast and lists both machines as peers, and binds DDS to the Ethernet address (`MY_IP`) so it never uses Wi-Fi. `env_laptop.sh` and `env_jetson.sh` set `ROS_DOMAIN_ID`, `RMW_IMPLEMENTATION` and `CYCLONEDDS_URI` and fill in the addresses from `network.env`. The startup scripts source them, so nothing depends on `~/.bashrc`.
+```bash
+./startup.sh
+```
 
-To use the environment in your own terminals: `source distributed/env_laptop.sh` (or `env_jetson.sh`).
+This launches four terminal tabs:
+1. Gazebo simulation (robot spawn + bridges)
+2. `joy_node` (joystick driver, with a deadzone of ±0.2 to filter drift/noise)
+3. `teleop_twist_joy` (converts joystick input to `/cmd_vel`)
+4. Nav2 + RViz (`nav_bringup.launch.py`: map server, AMCL, planner, controller, and the navigation RViz layout)
 
-## Troubleshooting
+The script auto-detects your workspace from its own location, so it works regardless of what you've named it — no editing required, as long as the repo is cloned into `src/` as usual.
 
-| Symptom | Check |
+## Usage
+
+### Launch the simulation only
+
+```bash
+ros2 launch pathfinder_bot launch_sim.launch.py
+```
+
+This spawns the robot in Gazebo, starts `robot_state_publisher`, and brings up all ROS 2 ↔ Gazebo bridges (odometry, TF, lidar, cameras). It loads `worlds/warehouse_world.sdf`, a custom warehouse with outer walls, interior walls, blockers, and shelves.
+
+### Check that everything works
+
+With the simulation running, in a second terminal:
+
+```bash
+./check_sim.sh
+```
+
+This confirms that the clock, odometry, TF, joint states, IMU, lidar, and both cameras are publishing, then drives the robot forward briefly and checks that odometry changes.
+
+### Drive the robot with a joystick
+
+```bash
+ros2 run joy joy_node --ros-args -p deadzone:=0.2
+ros2 run teleop_twist_joy teleop_node --ros-args \
+  -p axis_linear.x:=1 \
+  -p axis_angular.yaw:=0 \
+  -p scale_linear.x:=0.5 \
+  -p scale_angular.yaw:=1.0 \
+  -p enable_button:=0
+```
+
+The `deadzone:=0.2` parameter ignores joystick axis input between -0.2 and 0.2, preventing drift or noise from sending unintended movement commands.
+
+### Navigate autonomously (Nav2)
+
+With the simulation running:
+
+```bash
+ros2 launch pathfinder_bot nav_bringup.launch.py
+```
+
+This starts the map server (`maps/pathfinder_map.yaml`), AMCL, the Nav2 stack, and RViz (`rviz/pathfinder_nav.rviz`). The robot starts at the world origin, which AMCL is pre-configured to expect. In RViz, use **2D Goal Pose** to send the robot somewhere. If the robot's position on the map looks wrong, set it with **2D Pose Estimate**.
+
+Useful arguments: `rviz:=false` (Nav2 only), `map:=<path>`, `params_file:=<path>`.
+
+### Visualize sensors in RViz
+
+To look at the camera streams and point clouds instead:
+
+```bash
+rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
+```
+## Package Structure
+```pathfinder_bot/
+├── description/ # URDF/xacro robot definition
+├── launch/ # Launch files (sim + robot_state_publisher)
+├── config/ # ROS 2 ↔ Gazebo bridge and SLAM configuration
+├── worlds/ # Gazebo world files
+├── maps/ # Saved occupancy map (from slam_toolbox)
+├── rviz/ # Saved RViz configuration
+└── models/ # Custom Gazebo models/meshes (if any)
+```
+
+## Key Topics
+
+| Topic | Description |
 |---|---|
-| Ping works but the machines don't see each other's topics | Same `ROS_DOMAIN_ID` and `RMW_IMPLEMENTATION` on both? Did you `source` the env script in *that terminal*? Run `echo $CYCLONEDDS_URI`. |
-| `ros2 topic list` shows nothing from the other side, ping fails | Wrong subnet or IP. Confirm both `ip -4 addr` outputs. |
-| Firewall | `sudo ufw status`. If active, allow UDP between the two IPs (DDS uses UDP ports 7400 and up). |
-| Nav2 starts but goals are rejected | Check `ros2 node list` from the Jetson for `/robot_state_publisher`. Run `check_link.sh` and look at which topic fails. |
-| TF errors such as extrapolation into the past | Every Jetson node must use `use_sim_time:=true` (the default in `nav_bringup.launch.py`), and `/clock` must arrive. You may need to raise `transform_tolerance` in `config/nav2_params.yaml`. |
-| Laggy RViz or dropped scans | Check the link speed with `ethtool <iface>`. Camera topics should not be shown on this setup. |
+| `/clock` | Simulation time (Gazebo → ROS) |
+| `/cmd_vel` | Velocity commands (ROS → Gazebo) |
+| `/odom` | Odometry (Gazebo → ROS) |
+| `/tf` | Transform tree |
+| `/scan` | Lidar scan |
+| `/scan/points` | Lidar point cloud |
+| `/joint_states` | Wheel joint states |
+| `/imu` | IMU orientation, angular velocity, linear acceleration |
+| `/camera/front/image` | Front camera RGB image |
+| `/camera/front/depth_image` | Front camera depth image |
+| `/camera/front/camera_info` | Front camera intrinsics |
+| `/camera/front/points` | Front camera point cloud |
+| `/camera/rear/image` | Rear camera RGB image |
+| `/camera/rear/depth_image` | Rear camera depth image |
+| `/camera/rear/camera_info` | Rear camera intrinsics |
+| `/camera/rear/points` | Rear camera point cloud |
 
-## Security note
+## Roadmap
 
-There is no authentication or encryption on the ROS 2 link. This is fine on a private lab bench. Do not expose it to an untrusted network.
+- [x] Custom simulation world
+- [x] SLAM mapping (`slam_toolbox`, saved map in `maps/`)
+- [x] Nav2 autonomous navigation with AMCL — localization, goal-pose navigation, and avoidance of obstacles not on the saved map, verified in simulation
+- [ ] Distributed setup reference (simulation on a laptop, Nav2 on a Jetson) — see [`distributed/`](distributed/)
+- [ ] Add a screenshot/GIF of the robot in Gazebo + RViz to this README
+
+## Credits
+
+Built on the ROS 2 / Gazebo robot description structure from [Articulated Robotics](https://articulatedrobotics.xyz/) by Josh Newans, extended with dual-camera sensing and custom bridge configuration.
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
