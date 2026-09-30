@@ -15,11 +15,11 @@ This README covers **v1**: everything running on a single machine. For a referen
 
 **Gazebo: the warehouse world with Pathfinder**
 
-![Gazebo warehouse world](docs/images/gazebo_world.png)
+![Gazebo warehouse world](docs/images/Gazebo_GUI.png)
 
 **RViz: Nav2 following a planned path on the saved map**
 
-![RViz with Nav2](docs/images/rviz_nav2.png)
+![RViz with Nav2](docs/images/Nav2_Rviz.png)
 
 ## Features
 
