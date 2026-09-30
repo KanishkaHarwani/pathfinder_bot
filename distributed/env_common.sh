@@ -5,12 +5,21 @@ pathfinder_env() {
     local dist_dir
     dist_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+    # Tracked defaults (placeholders only).
     # shellcheck disable=SC1091
     source "$dist_dir/network.env"
 
+    # Machine-specific values (not tracked by git) override the placeholders.
+    if [ -f "$dist_dir/network.local.env" ]; then
+        # shellcheck disable=SC1091
+        source "$dist_dir/network.local.env"
+    fi
+
     local ip_re='^([0-9]{1,3}\.){3}[0-9]{1,3}$'
     if ! [[ "$LAPTOP_IP" =~ $ip_re && "$JETSON_IP" =~ $ip_re ]]; then
-        echo "Set LAPTOP_IP and JETSON_IP in $dist_dir/network.env first."
+        echo "LAPTOP_IP and JETSON_IP are not valid IPs."
+        echo "Create $dist_dir/network.local.env (copy network.env) and set the real"
+        echo "static IPs there. Do not put real IPs in the tracked network.env."
         return 1
     fi
 

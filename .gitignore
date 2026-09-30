@@ -32,3 +32,5 @@ Thumbs.db
 # ROS bag files (usually large, shouldn't be committed unless intentional)
 *.bag
 *.db3
+distributed/network.local.env
+distributed/network.local.env
