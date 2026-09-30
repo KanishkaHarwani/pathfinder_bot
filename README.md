@@ -9,7 +9,7 @@ This project builds on the ROS 2 / Gazebo robot description structure popularize
 
 This README covers **v1**: everything running on a single machine. For a reference setup that splits simulation and navigation across two machines (a laptop and a Jetson), see [`distributed/README.md`](distributed/README.md).
 
-![Pathfinder navigating in Gazebo and RViz](docs/images/pathfinder_nav.gif)
+![Pathfinder navigating in Gazebo and RViz](docs/images/Gazebo_Nav2_test.gif)
 
 ## Screenshots
 
