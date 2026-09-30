@@ -19,7 +19,7 @@ Only lightweight topics cross the network (`/clock`, `/odom`, `/tf`, `/scan` one
 | | |
 |---|---|
 | Laptop | Ubuntu 24.04, ROS 2 Jazzy, Gazebo Harmonic |
-| Jetson | Ubuntu 24.04, ROS 2 Jazzy: **fill in the model** |
+| Jetson | Jetson Orin Nano Developer Kit (Super), 8GB, Ubuntu 24.04, ROS 2 Jazzy |
 | Link | Direct Ethernet with static IPs |
 | DDS | Cyclone DDS (`rmw_cyclonedds_cpp`) |
 
