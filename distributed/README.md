@@ -23,6 +23,8 @@ Only lightweight topics cross the network (`/clock`, `/odom`, `/tf`, `/scan` one
 | Link | Direct Ethernet with static IPs |
 | DDS | Cyclone DDS (`rmw_cyclonedds_cpp`) |
 
+Ubuntu 24.04 is not an officially supported target for the original Jetson Nano, so this setup is not expected to work on that board.
+
 ## Setup
 
 Do these once on each machine.
@@ -39,13 +41,18 @@ Do these once on each machine.
    colcon build --packages-select pathfinder_bot
    ```
    The Jetson needs the package because Nav2 reads its params and map from the package share directory. It never launches the sim.
-3. **Set the addresses.** Edit `distributed/network.env` on **both** machines with the same values:
+3. **Set the addresses.** On **each** machine, copy the placeholder file to an untracked local one, then edit the copy:
+   ```bash
+   cd ~/ros2_ws/src/pathfinder_bot/distributed
+   cp network.env network.local.env
+   ```
+   In `network.local.env`, use the same values on both machines:
    ```bash
    export ROS_DOMAIN_ID=42
    export LAPTOP_IP=<laptop ethernet ip>
    export JETSON_IP=<jetson ethernet ip>
    ```
-   Find each address with `ip -4 addr`. Both machines must be on the same subnet.
+   Find each address with `ip -4 addr`. Both machines must be on the same subnet. `network.local.env` is git-ignored, so your real addresses stay out of the repo. Leave `network.env` alone; it only holds `CHANGEME` placeholders, which the scripts reject.
 
 ## Run
 
@@ -66,7 +73,7 @@ It checks the ping, the simulation topics, the Nav2 topics, and that `/amcl`, `/
 
 ## How discovery works
 
-`cyclonedds.xml` disables multicast and lists both machines as peers, and binds DDS to the Ethernet address (`MY_IP`) so it never uses Wi-Fi. `env_laptop.sh` and `env_jetson.sh` set `ROS_DOMAIN_ID`, `RMW_IMPLEMENTATION` and `CYCLONEDDS_URI` and fill in the addresses from `network.env`. The startup scripts source them, so nothing depends on `~/.bashrc`.
+`cyclonedds.xml` disables multicast and lists both machines as peers, and binds DDS to the Ethernet address (`MY_IP`) so it never uses Wi-Fi. `env_laptop.sh` and `env_jetson.sh` set `ROS_DOMAIN_ID`, `RMW_IMPLEMENTATION` and `CYCLONEDDS_URI` and fill in the addresses from `network.local.env` (loaded on top of the placeholders in `network.env`). The startup scripts source them, so nothing depends on `~/.bashrc`.
 
 To use the environment in your own terminals: `source distributed/env_laptop.sh` (or `env_jetson.sh`).
 

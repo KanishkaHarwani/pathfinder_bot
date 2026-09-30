@@ -43,7 +43,7 @@ flowchart TB
 
     subgraph Bridge["ROS 2 to Gazebo Bridge"]
         RSP["robot_state_publisher"]
-        PB["ros_gz_bridge<br/>clock, odom, tf, scan, imu, cmd_vel"]
+        PB["ros_gz_bridge<br/>clock, odom, tf, scan, imu, gps, cmd_vel"]
         IB["ros_gz_image<br/>camera images"]
     end
 
@@ -84,9 +84,9 @@ flowchart TB
 
 ### Layer descriptions
 
-- **Robot Description**: `robot.urdf.xacro` and its includes (`links`, `joints`, `materials`, `inertial_macros`, plus the `gazebo_*.xacro` files) define Pathfinder's physical form: a differential-drive base, front and rear RGBD cameras, a 3D lidar, and an IMU. The TF tree is rooted at `base_link` (there is no `base_footprint`).
-- **Simulation**: Gazebo Harmonic runs physics and sensor simulation against the custom warehouse world. Plugin names use the `gz-sim-*` / `gz::sim::systems::*` convention (the older `ignition` names from Fortress no longer apply).
-- **ROS 2 ↔ Gazebo bridge**: `robot_state_publisher` publishes static TF from the URDF. `ros_gz_bridge` (configured by `gz_bridge.yaml`) and `ros_gz_image` translate Gazebo topics into ROS 2 topics. Topics that cross this boundary include `/clock`, `/odom`, `/tf`, `/scan`, `/imu`, `/joint_states`, `/cmd_vel`, and the camera streams.
+- **Robot Description**: `robot.urdf.xacro` and its includes (`links`, `joints`, `materials`, `inertial_macros`, plus the `gazebo_*.xacro` files) define Pathfinder's physical form: a differential-drive base, front and rear RGBD cameras, a 3D lidar, an IMU, and a GPS (navsat) receiver. The TF tree is rooted at `base_link` (there is no `base_footprint`).
+- **Simulation**: Gazebo Harmonic runs physics and sensor simulation against the custom warehouse world. The world loads the IMU and NavSat system plugins and defines a geographic origin (`<spherical_coordinates>`); without both, `/gps/fix` publishes nothing (see the Known Issues doc). With ENU and heading 0, world +X is east and +Y is north. Plugin names use the `gz-sim-*` / `gz::sim::systems::*` convention (the older `ignition` names from Fortress no longer apply).
+- **ROS 2 ↔ Gazebo bridge**: `robot_state_publisher` publishes static TF from the URDF. `ros_gz_bridge` (configured by `gz_bridge.yaml`) and `ros_gz_image` translate Gazebo topics into ROS 2 topics. Topics that cross this boundary include `/clock`, `/odom`, `/tf`, `/scan`, `/imu`, `/gps/fix`, `/joint_states`, `/cmd_vel`, and the camera streams.
 - **Localization**: `map_server` serves the saved map (`maps/pathfinder_map.yaml` / `.pgm`, 0.05 m/px). AMCL matches live `/scan` data against it and publishes the `map → odom` transform. This replaces the earlier placeholder `static_transform_publisher`. `odom → base_link` comes from the DiffDrive plugin via the bridge.
 - **Nav2 stack**: BT Navigator orchestrates the Planner Server (global path) and Controller Server (local obstacle avoidance) against shared costmaps, producing `/cmd_vel`. It is brought up by `launch/nav_bringup.launch.py`, which wraps `nav2_bringup`'s `bringup_launch.py`.
 - **Mapping (offline, on demand)**: `slam_toolbox` was used once to build the map and is not part of the navigation runtime. To remap, run it with `config/mapper_params_online_async.yaml` and save a new map into `maps/`.
@@ -155,15 +155,17 @@ The Jetson still builds the `pathfinder_bot` package, because Nav2 reads its par
 | Jetson → Laptop | `/cmd_vel`, `/map`, costmaps, `/plan`, `/tf` (`map → odom` from AMCL), lifecycle and action status |
 | RViz (laptop) → Jetson | `/goal_pose`, `/initialpose` |
 
+`/imu` and `/gps/fix` are also not sent over the network today, because nothing on the Jetson consumes them. If a future EKF or GPS navigation node runs on the Jetson, add them to the Laptop → Jetson row.
+
 Not sent over the network: `/camera/*/image`, `/camera/*/depth_image`, `/camera/*/points`, `/scan/points`. Nothing on the Jetson consumes them, so they stay local to the laptop. This is the main reason RViz lives there.
 
 ### Network requirements
 
-- Both machines have static Ethernet IPs:
+- Both machines have static Ethernet IPs (kept in each machine's untracked `distributed/network.local.env`, not in the repo):
   - Laptop: `<LAPTOP_STATIC_IP>`
   - Jetson: `<JETSON_STATIC_IP>`
 - Same `ROS_DOMAIN_ID` on both. Nodes on different domain IDs never discover each other.
-- Same `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` on both. Jazzy defaults to Fast DDS, so this must be set explicitly. Both machines set it via `distributed/env_laptop.sh` and `distributed/env_jetson.sh`, sourced by the startup scripts rather than relying on `~/.bashrc`. The shared addresses and domain ID live in `distributed/network.env`.
+- Same `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` on both. Jazzy defaults to Fast DDS, so this must be set explicitly. Both machines set it via `distributed/env_laptop.sh` and `distributed/env_jetson.sh`, sourced by the startup scripts rather than relying on `~/.bashrc`. The domain ID and both IPs live in `distributed/network.local.env` (untracked, one copy per machine); the tracked `distributed/network.env` holds only `CHANGEME` placeholders.
 - **Discovery uses an explicit peer list, not multicast.** Both machines point `CYCLONEDDS_URI` at the same file, `distributed/cyclonedds.xml`, which lists both peer IPs and binds DDS to the Ethernet interface. This avoids the dependence on multicast behavior over a direct link.
 - **Time:** every Jetson node runs with `use_sim_time:=true` and consumes `/clock` from the laptop. Wall-clock sync between the machines is not what matters here; sim time is.
 
@@ -171,7 +173,7 @@ Not sent over the network: `/camera/*/image`, `/camera/*/depth_image`, `/camera/
 
 - Whether AMCL and Nav2 run comfortably on the Jetson at the configured scan rate (the lidar is 20 Hz, 360 samples per scan).
 - Latency of `/scan` and `/tf` over Ethernet and its effect on TF timeouts. Costmap and AMCL `transform_tolerance` may need raising.
-- Confirm which Jetson model is used and record it in `distributed/README.md`. Ubuntu 24.04 is not an officially supported target for the original Jetson Nano.
+- Record CPU load of Nav2 + AMCL on the Jetson during navigation (tested on a Jetson Orin Nano Developer Kit (Super), 8GB; memory use is comfortable).
 
 ---
 
@@ -203,7 +205,8 @@ pathfinder_bot/
 │
 └── distributed/                   # v2 reference setup
     ├── README.md
-    ├── network.env                # ROS_DOMAIN_ID and both IPs (edit on each machine)
+    ├── network.env                # placeholders only (CHANGEME), tracked
+    ├── network.local.env          # real ROS_DOMAIN_ID and IPs, untracked (git-ignored)
     ├── env_common.sh
     ├── env_laptop.sh
     ├── env_jetson.sh
@@ -220,7 +223,7 @@ pathfinder_bot/
 ## 4. Status
 
 **Done — both v1 and v2 fully working, confirmed end to end**
-- Robot description, custom warehouse world, bridges, joystick teleop (including a Bluetooth controller fix — see Known Issues doc)
+- Robot description (including IMU and simulated GPS), custom warehouse world, bridges, joystick teleop (including a Bluetooth controller fix — see Known Issues doc)
 - Ported to Jazzy / Harmonic / Ubuntu 24.04 on both machines
 - Map built with `slam_toolbox` and saved (`maps/pathfinder_map.*`, 606×493 px, about 30 m × 25 m)
 - `nav2_params.yaml`, `nav_bringup.launch.py`, `pathfinder_nav.rviz` written; `startup.sh` updated for v1
@@ -228,7 +231,7 @@ pathfinder_bot/
 - **v2 (`distributed/`) built and tested end to end:** sim + RViz on the laptop, Nav2 + AMCL on the Jetson, goal sent and executed over the network link using an explicit Cyclone DDS peer list (no multicast)
 
 **Remaining**
-- Fill in the real Jetson model and static IPs in `distributed/README.md` / `network.env`
+- Decide what GPS is for: sensor only (current), `robot_localization` fusion, or GPS waypoint navigation (the last two need an outdoor world and a decision on who owns `map → odom`)
 - Commit and tag `v1.0`, then the `distributed/` addition
 - Fix the `git remote` URL typo (`pathfiner_bot` → `pathfinder_bot`) — currently redirected by GitHub, works but should be corrected
 - Nav2 controller tuning beyond the current footprint and speed limits, if obstacle avoidance needs sharpening further
