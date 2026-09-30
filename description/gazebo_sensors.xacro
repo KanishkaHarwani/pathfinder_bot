@@ -111,5 +111,17 @@
             <gz_frame_id>imu_link</gz_frame_id>
         </sensor>
     </gazebo>
+    
+    <!-- =========================================== -->
+    <!-- =============== GPS SENSOR ================= -->
+    <!-- =========================================== -->
+    <gazebo reference="gps_link">
+        <sensor name="navsat_sensor" type="navsat">
+            <always_on>true</always_on>
+            <update_rate>5</update_rate>
+            <topic>gps/fix</topic>
+            <gz_frame_id>gps_link</gz_frame_id>
+        </sensor>
+    </gazebo>
 
 </robot>

@@ -218,4 +218,23 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_box>
     </link>
+    <!-- =========================================== -->
+    <!-- ================ IMU LINK ================== -->
+    <!-- =========================================== -->
+    <link name="gps_link">
+        <visual>
+            <geometry>
+            <cylinder radius="0.02" length="0.02"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.02" length="0.02"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_cylinder mass="0.05" length="0.02" radius="0.02">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:inertial_cylinder>
+    </link>
 </robot>

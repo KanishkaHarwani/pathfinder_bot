@@ -34,7 +34,7 @@ check_topic() {
 echo "Publishing topics:"
 for t in /clock /odom /tf /joint_states /imu /scan /scan/points \
          /camera/front/image /camera/front/depth_image \
-         /camera/rear/image /camera/rear/depth_image; do
+         /camera/rear/image /camera/rear/depth_image /gps/fix; do
     check_topic "$t"
 done
 
