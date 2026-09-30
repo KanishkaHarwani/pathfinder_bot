@@ -11,6 +11,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WS_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 [ -f "$WS_DIR/install/setup.bash" ] && source "$WS_DIR/install/setup.bash"
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp   # must match the sim terminals
 
 if [ "$ROS_DISTRO" != "jazzy" ]; then
     echo "ROS_DISTRO is '${ROS_DISTRO:-unset}', expected jazzy. Source your workspace first."

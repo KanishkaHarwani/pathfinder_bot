@@ -9,13 +9,26 @@ This project builds on the ROS 2 / Gazebo robot description structure popularize
 
 This README covers **v1**: everything running on a single machine. For a reference setup that splits simulation and navigation across two machines (a laptop and a Jetson), see [`distributed/README.md`](distributed/README.md).
 
+![Pathfinder navigating in Gazebo and RViz](docs/images/pathfinder_nav.gif)
+
+## Screenshots
+
+**Gazebo: the warehouse world with Pathfinder**
+
+![Gazebo warehouse world](docs/images/gazebo_world.png)
+
+**RViz: Nav2 following a planned path on the saved map**
+
+![RViz with Nav2](docs/images/rviz_nav2.png)
+
 ## Features
 
 - Differential drive base (diff-drive plugin via `gz-sim`)
 - Front and rear RGBD cameras (`camera/front`, `camera/rear`)
 - 3D lidar (gpu_lidar) for scanning and point cloud generation
-- IMU mounted at `base_link` (coincident with the drive axis) for orientation, angular velocity, and linear acceleration
-- Full ROS 2 ↔ Gazebo topic bridging (odometry, TF, joint states, scan, camera streams)
+- IMU mounted on the chassis above `base_link` for orientation, angular velocity, and linear acceleration
+- GPS (navsat) receiver publishing `sensor_msgs/NavSatFix` on `/gps/fix`; the world defines a geographic origin (`<spherical_coordinates>`) so positions convert to latitude/longitude
+- Full ROS 2 ↔ Gazebo topic bridging (odometry, TF, joint states, scan, IMU, GPS, camera streams)
 - SLAM mapping with `slam_toolbox`
 - Autonomous navigation with Nav2 and AMCL — goal-pose navigation, localization, and obstacle avoidance for obstacles not present on the saved map, all tested working in simulation
 - RViz configurations for both sensor visualization and navigation
@@ -58,6 +71,12 @@ This launches four terminal tabs:
 
 The script auto-detects your workspace from its own location, so it works regardless of what you've named it — no editing required, as long as the repo is cloned into `src/` as usual.
 
+The script also sets `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` in every tab (Jazzy defaults to Fast DDS). If you run nodes in your own terminals, export it there too, or they won't see the simulation's topics:
+
+```bash
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+```
+
 ## Usage
 
 ### Launch the simulation only
@@ -76,7 +95,7 @@ With the simulation running, in a second terminal:
 ./check_sim.sh
 ```
 
-This confirms that the clock, odometry, TF, joint states, IMU, lidar, and both cameras are publishing, then drives the robot forward briefly and checks that odometry changes.
+This confirms that the clock, odometry, TF, joint states, IMU, GPS, lidar, and both cameras are publishing, then drives the robot forward briefly and checks that odometry changes.
 
 ### Drive the robot with a joystick
 
@@ -112,15 +131,21 @@ To look at the camera streams and point clouds instead:
 rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 ```
 ## Package Structure
-```pathfinder_bot/
-├── description/ # URDF/xacro robot definition
-├── launch/ # Launch files (sim + robot_state_publisher)
-├── config/ # ROS 2 ↔ Gazebo bridge and SLAM configuration
-├── worlds/ # Gazebo world files
-├── maps/ # Saved occupancy map (from slam_toolbox)
-├── rviz/ # Saved RViz configuration
-└── models/ # Custom Gazebo models/meshes (if any)
+
 ```
+pathfinder_bot/
+├── description/   # URDF/xacro robot definition
+├── launch/        # Launch files (sim, robot_state_publisher, Nav2)
+├── config/        # ROS 2 ↔ Gazebo bridge, SLAM and Nav2 parameters
+├── worlds/        # Gazebo world files
+├── maps/          # Saved occupancy map (from slam_toolbox)
+├── rviz/          # Saved RViz configurations
+├── models/        # Custom Gazebo models/meshes (if any)
+├── docs/          # Architecture, known issues, images
+└── distributed/   # Laptop + Jetson reference setup
+```
+
+See [`docs/Architecture.md`](docs/Architecture.md) for how the pieces fit together and [`docs/Known_Issues_and_Workarounds.md`](docs/Known_Issues_and_Workarounds.md) for fixes to problems hit during development.
 
 ## Key Topics
 
@@ -134,6 +159,7 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 | `/scan/points` | Lidar point cloud |
 | `/joint_states` | Wheel joint states |
 | `/imu` | IMU orientation, angular velocity, linear acceleration |
+| `/gps/fix` | GPS position fix (NavSatFix, Gazebo → ROS) |
 | `/camera/front/image` | Front camera RGB image |
 | `/camera/front/depth_image` | Front camera depth image |
 | `/camera/front/camera_info` | Front camera intrinsics |
@@ -148,8 +174,10 @@ rviz2 -d src/pathfinder_bot/rviz/pathfinder.rviz
 - [x] Custom simulation world
 - [x] SLAM mapping (`slam_toolbox`, saved map in `maps/`)
 - [x] Nav2 autonomous navigation with AMCL — localization, goal-pose navigation, and avoidance of obstacles not on the saved map, verified in simulation
-- [ ] Distributed setup reference (simulation on a laptop, Nav2 on a Jetson) — see [`distributed/`](distributed/)
-- [ ] Add a screenshot/GIF of the robot in Gazebo + RViz to this README
+- [x] Simulated GPS (navsat) sensor
+- [x] Distributed setup reference (simulation on a laptop, Nav2 on a Jetson) — see [`distributed/`](distributed/)
+- [x] Screenshot/GIF of the robot in Gazebo + RViz in this README
+- [ ] GPS-based localization or waypoint navigation (needs an outdoor world)
 
 ## Credits
 

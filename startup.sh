@@ -32,21 +32,25 @@ if [ "$DISTRO" != "jazzy" ]; then
     exit 1
 fi
 
+# Every tab uses Cyclone DDS. Jazzy defaults to Fast DDS, so this is set explicitly
+# here instead of relying on ~/.bashrc. (Same RMW the distributed setup uses.)
+PRE="export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp; source $SETUP_FILE"
+
 # Terminal 1: Gazebo simulation + robot_state_publisher + bridges
-gnome-terminal --tab --title="Simulation" -- bash -c "source $SETUP_FILE; ros2 launch pathfinder_bot launch_sim.launch.py; exec bash"
+gnome-terminal --tab --title="Simulation" -- bash -c "$PRE; ros2 launch pathfinder_bot launch_sim.launch.py; exec bash"
 sleep 5
 
 # Terminal 2: Joystick driver
 # deadzone:=0.2 ignores axis input between -0.2 and 0.2 so no drift/noise
 # gets sent downstream to teleop_twist_joy
-gnome-terminal --tab --title="Joy Node" -- bash -c "source $SETUP_FILE; ros2 run joy joy_node --ros-args -p deadzone:=0.2; exec bash"
+gnome-terminal --tab --title="Joy Node" -- bash -c "$PRE; ros2 run joy joy_node --ros-args -p deadzone:=0.2; exec bash"
 sleep 1
 
 # Terminal 3: Joystick teleop -> cmd_vel
-gnome-terminal --tab --title="Teleop Joy" -- bash -c "source $SETUP_FILE; ros2 run teleop_twist_joy teleop_node --ros-args -p axis_linear.x:=1 -p axis_angular.yaw:=0 -p scale_linear.x:=0.5 -p scale_angular.yaw:=1.0 -p enable_button:=0; exec bash"
+gnome-terminal --tab --title="Teleop Joy" -- bash -c "$PRE; ros2 run teleop_twist_joy teleop_node --ros-args -p axis_linear.x:=1 -p axis_angular.yaw:=0 -p scale_linear.x:=0.5 -p scale_angular.yaw:=1.0 -p enable_button:=0; exec bash"
 sleep 1
 
 # Terminal 4: Nav2 (map_server, AMCL, planner, controller) + RViz
 # Give the sim a few seconds to publish /clock and the robot to spawn first.
 sleep 4
-gnome-terminal --tab --title="Nav2 + RViz" -- bash -c "source $SETUP_FILE; ros2 launch pathfinder_bot nav_bringup.launch.py; exec bash"
+gnome-terminal --tab --title="Nav2 + RViz" -- bash -c "$PRE; ros2 launch pathfinder_bot nav_bringup.launch.py; exec bash"

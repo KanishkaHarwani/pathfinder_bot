@@ -40,6 +40,33 @@ Running log of bugs, gotchas, and non-obvious fixes hit during development. Chec
 ```
 Applied in `warehouse_world.sdf` this session.
 
+### `/gps/fix` never publishes, no error shown
+
+**Symptom:** Every other sensor topic works; `/gps/fix` has no publisher (or is bridged but silent), and nothing appears in the terminal.
+
+**Cause:** The `navsat` sensor needs two things in the *world* file, and stays silent if either is missing:
+1. the NavSat system plugin, and
+2. a geographic origin (`<spherical_coordinates>`), which the sensor uses to convert the robot's position into latitude/longitude.
+
+Like the `ogre2` and IMU-plugin issues above, the failure is silent rather than a crash.
+
+**Fix:** In the world file, add the plugin next to the other `gz-sim-*-system` plugins:
+```xml
+<plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+```
+and add the origin inside `<world>`:
+```xml
+<spherical_coordinates>
+  <surface_model>EARTH_WGS84</surface_model>
+  <world_frame_orientation>ENU</world_frame_orientation>
+  <latitude_deg>47.397971</latitude_deg>
+  <longitude_deg>8.546164</longitude_deg>
+  <elevation>0</elevation>
+  <heading_deg>0</heading_deg>
+</spherical_coordinates>
+```
+The coordinates are arbitrary. With ENU and `heading_deg` 0, world +X is east and +Y is north, so driving forward from the origin increases longitude. The sensor also has to be bridged in `gz_bridge.yaml` (`gz.msgs.NavSat` to `sensor_msgs/msg/NavSatFix`). Applied in `warehouse_world.sdf`.
+
 ---
 
 ## SLAM (slam_toolbox)
