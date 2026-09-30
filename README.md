@@ -177,7 +177,6 @@ See [`docs/Architecture.md`](docs/Architecture.md) for how the pieces fit togeth
 - [x] Simulated GPS (navsat) sensor
 - [x] Distributed setup reference (simulation on a laptop, Nav2 on a Jetson) — see [`distributed/`](distributed/)
 - [x] Screenshot/GIF of the robot in Gazebo + RViz in this README
-- [ ] GPS-based localization or waypoint navigation (needs an outdoor world)
 
 ## Credits
 
